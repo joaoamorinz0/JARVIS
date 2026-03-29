@@ -6,6 +6,16 @@ from dotenv import load_dotenv
 from datetime import date
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+import tempfile
+from playsound import playsound
+from elevenlabs.client import ElevenLabs
+import sounddevice as sd
+import soundfile as sf
+import numpy as np
+import whisper
+
+
+
 
 load_dotenv()
 
@@ -17,6 +27,8 @@ usuario = {
 hoje = date.today().strftime("%d/%m/%Y")
 
 cliente = Groq(api_key=os.getenv("GROQ_API_KEY"))
+elevenlabs = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
+modelo_whisper = whisper.load_model("base")
 
 def carregar_historico():
     try:
@@ -83,6 +95,35 @@ def proxima_musica():
     sp.next_track()
     return "Pulando para a próxima música."
 
+def falar(texto):
+    audio = elevenlabs.text_to_speech.convert(
+        text=texto,
+        voice_id="pNInz6obpgDQGcFmaJgB",    
+        model_id="eleven_multilingual_v2" 
+    )
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+        for chunk in audio:
+            f.write(chunk)
+        tmp_path = f.name
+    
+    playsound(tmp_path)
+
+def ouvir():
+    print("Ouvindo...")
+    duracao = 6
+    sample_rate = 16000
+    audio = sd.rec(int(duracao * sample_rate), samplerate=sample_rate, channels=1, dtype='float32')
+    sd.wait()
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
+        sf.write(f.name, audio, sample_rate)
+        tmp_path = f.name
+    
+    resultado = modelo_whisper.transcribe(tmp_path, language="pt")
+    texto = resultado["text"].strip()
+    return texto if texto else None
+
 def perguntar_ia(mensagem, hora):
     historico.append({
         "role": "user",
@@ -95,7 +136,7 @@ def perguntar_ia(mensagem, hora):
      messages=[
         {
             "role": "system",
-           "content": f"""Você é o Jarvis, assistente pessoal de {usuario['nome']} de {usuario['cidade']}.
+           "content": f"""Você é o Jarvis, assistente pessoal de {usuario['nome']}.
 Hoje é {hoje} e são exatamente {hora}h.
 Seja direto e útil. Quando o usuário pedir CEP, responda apenas: BUSCAR_CEP: [cep].
 Quando pedir clima, responda apenas: BUSCAR_CLIMA: [cidade].
@@ -136,15 +177,19 @@ def iniciar_jarvis():
     msg = saudacao(hora)
     print(f"\n{msg}, {usuario['nome']}! Jarvis online.\n")
 
-    while True:
+    while True:  # ← 4 espaços de indentação
         comando = input("Você: ")
+        if not comando:
+            print("Não entendi, tente novamente.")
+            continue
+        print(f"Você: {comando}")
         if comando.lower() == "sair":
             salvar_historico()
             print("Jarvis desligando...")
             break
-
-        resposta = perguntar_ia(comando,hora)
+        resposta = perguntar_ia(comando, hora)
         print(f"\nJarvis: {resposta}\n")
+        falar(resposta)
 
 historico = carregar_historico()
 iniciar_jarvis()
