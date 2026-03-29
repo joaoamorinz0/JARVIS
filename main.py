@@ -4,6 +4,8 @@ import os
 from groq import Groq
 from dotenv import load_dotenv
 from datetime import date
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
 
 load_dotenv()
 
@@ -57,6 +59,30 @@ def buscar_clima(cidade):
     temp = clima_dados["current"]["temperature_2m"]
     return f"Agora em {nome_cidade}: {temp}°C"
 
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+    client_id=os.getenv("SPOTIFY_CLIENT_ID"),
+    client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
+    redirect_uri=os.getenv("SPOTIFY_REDIRECT_URI"),
+    scope="user-modify-playback-state user-read-playback-state"
+))
+
+def tocar_musica(query):
+    resultados = sp.search(q=query, limit=1, type="track")
+    tracks = resultados["tracks"]["items"]
+    if not tracks:
+        return "Música não encontrada."
+    track = tracks[0]
+    sp.start_playback(uris=[track["uri"]])
+    return f"Tocando: {track['name']} - {track['artists'][0]['name']}"
+
+def pausar_musica():
+    sp.pause_playback()
+    return "Música pausada."
+
+def proxima_musica():
+    sp.next_track()
+    return "Pulando para a próxima música."
+
 def perguntar_ia(mensagem, hora):
     historico.append({
         "role": "user",
@@ -73,6 +99,9 @@ def perguntar_ia(mensagem, hora):
 Hoje é {hoje} e são exatamente {hora}h.
 Seja direto e útil. Quando o usuário pedir CEP, responda apenas: BUSCAR_CEP: [cep].
 Quando pedir clima, responda apenas: BUSCAR_CLIMA: [cidade].
+Quando o usuário pedir para tocar música, responda apenas: TOCAR_MUSICA: [nome da música ou artista].
+Quando pedir para pausar, responda apenas: PAUSAR_MUSICA.
+Quando pedir para pular, responda apenas: PROXIMA_MUSICA.
 Para todo o resto, responda normalmente."""
         },
         *historico
@@ -92,6 +121,13 @@ Para todo o resto, responda normalmente."""
     elif "BUSCAR_CLIMA:" in resposta_texto:
         cidade = resposta_texto.split("BUSCAR_CLIMA:")[1].strip()
         return buscar_clima(cidade)
+    elif "TOCAR_MUSICA:" in resposta_texto:
+        query = resposta_texto.split("TOCAR_MUSICA:")[1].strip()
+        return tocar_musica(query)
+    elif "PAUSAR_MUSICA" in resposta_texto:
+        return pausar_musica()
+    elif "PROXIMA_MUSICA" in resposta_texto:
+        return proxima_musica()
 
     return resposta_texto
 
