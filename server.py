@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from datetime import date
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+import subprocess
 
 load_dotenv()
 
@@ -65,6 +66,11 @@ def tocar_musica(query):
     sp.start_playback(uris=[track["uri"]])
     return f"Tocando: {track['name']} - {track['artists'][0]['name']}"
 
+def modo_alcool():
+    sp.start_playback(context_uri="spotify:playlist:211DtusAlTCjHkh7bEs1Ls")
+    subprocess.Popen(["code", "."], shell=True, creationflags=subprocess.DETACHED_PROCESS)
+    return "Playlist ativada. VS Code aberto. Boa sorte, João."
+
 class Mensagem(BaseModel):
     texto: str
     hora: int
@@ -86,7 +92,8 @@ Quando pedir clima, responda apenas: BUSCAR_CLIMA: [cidade].
 Quando pedir música, responda apenas: TOCAR_MUSICA: [música].
 Quando pedir pausa, responda apenas: PAUSAR_MUSICA.
 Quando pedir próxima, responda apenas: PROXIMA_MUSICA.
-Para todo o resto, responda normalmente."""
+Para todo o resto, responda normalmente.
+Quando o usuário disser "mais álcool" ou "modo álcool", responda EXATAMENTE com uma única palavra: MODO_ALCOOL. Nada mais."""
             },
             *historico
         ]
@@ -107,6 +114,8 @@ Para todo o resto, responda normalmente."""
     elif "PROXIMA_MUSICA" in resposta_texto:
         sp.next_track()
         return {"resposta": "Próxima música."}
+    elif "MODO_ALCOOL" in resposta_texto:
+        return {"resposta": modo_alcool()}
 
     return {"resposta": resposta_texto}
 
@@ -123,7 +132,8 @@ def spotify_status():
             return {
                 "tocando": True,
                 "musica": track["name"],
-                "artista": track["artists"][0]["name"]
+                "artista": track["artists"][0]["name"],
+                "capa": track["album"]["images"][0]["url"]  # ← linha nova
             }
         return {"tocando": False}
     except:

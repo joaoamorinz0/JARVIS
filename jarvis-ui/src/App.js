@@ -44,14 +44,24 @@ export default function App() {
           <div style={styles.cardLabel}>🌡 Clima</div>
           <div style={styles.cardValue}>{clima || "Carregando..."}</div>
         </div>
-        <div style={styles.card}>
-          <div style={styles.cardLabel}>🎵 Spotify</div>
-          <div style={styles.cardValue}>
-            {spotify?.tocando
-              ? `${spotify.musica} — ${spotify.artista}`
-              : "Nenhuma música"}
-          </div>
+       <div style={styles.card}>
+    <div style={styles.cardLabel}>🎵 Spotify</div>
+    {spotify?.tocando ? (
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 8 }}>
+            <img 
+                src={spotify.capa} 
+                alt="capa" 
+                style={{ width: 56, height: 56, borderRadius: 6 }}
+            />
+            <div>
+                <div style={{ fontSize: 13, color: "#c8dff0", fontWeight: 700 }}>{spotify.musica}</div>
+                <div style={{ fontSize: 11, color: "#4a6a85", marginTop: 4 }}>{spotify.artista}</div>
+            </div>
         </div>
+    ) : (
+        <div style={styles.cardValue}>Nenhuma música</div>
+    )}
+</div>
       </div>
 
       <div style={styles.chat}>
