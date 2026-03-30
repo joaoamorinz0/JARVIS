@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 
-const API = "http://127.0.0.1:8000";
+const API = "http://192.168.2.110:8000";
+
+const isMobile = window.innerWidth < 768;
 
 export default function App() {
   const [mensagens, setMensagens] = useState([]);
@@ -38,7 +40,7 @@ export default function App() {
 
   return (
     <div style={styles.container}>
-      <div style={styles.sidebar}>
+      <div style={{...styles.sidebar, display: isMobile ? "none" : "flex"}}>
         <h1 style={styles.logo}>JARVIS</h1>
         <div style={styles.card}>
           <div style={styles.cardLabel}>🌡 Clima</div>
@@ -72,7 +74,7 @@ export default function App() {
           {mensagens.map((m, i) => (
             <div key={i} style={m.role === "user" ? styles.msgUser : styles.msgJarvis}>
               <span style={styles.msgRole}>{m.role === "user" ? "Você" : "Jarvis"}</span>
-              <span>{m.content}</span>
+              <span style={{ whiteSpace: "pre-line" }}>{m.content}</span>
             </div>
           ))}
           {carregando && <div style={styles.msgJarvis}><span style={styles.msgRole}>Jarvis</span><span>Pensando...</span></div>}
@@ -94,19 +96,19 @@ export default function App() {
 }
 
 const styles = {
-  container: { display: "flex", height: "100vh", background: "#060a10", color: "#c8dff0", fontFamily: "monospace" },
+  container: { display: "flex", flexDirection: "row", height: "100vh", background: "#060a10", color: "#c8dff0", fontFamily: "monospace" },
   sidebar: { width: 240, background: "#0d1520", padding: 24, display: "flex", flexDirection: "column", gap: 16, borderRight: "1px solid #1a2d45" },
   logo: { fontSize: 28, fontWeight: 800, color: "#00d4ff", letterSpacing: 4, marginBottom: 16 },
   card: { background: "#060a10", border: "1px solid #1a2d45", borderRadius: 8, padding: 16 },
   cardLabel: { fontSize: 11, color: "#4a6a85", marginBottom: 8, letterSpacing: 2 },
   cardValue: { fontSize: 13, color: "#c8dff0", lineHeight: 1.5 },
-  chat: { flex: 1, display: "flex", flexDirection: "column" },
-  mensagens: { flex: 1, padding: 24, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16 },
+  chat: { flex: 1, display: "flex", flexDirection: "column", minWidth: 0 },
+  mensagens: { flex: 1, padding: 16, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16 },
   vazio: { color: "#4a6a85", textAlign: "center", marginTop: 80, fontSize: 18 },
-  msgUser: { alignSelf: "flex-end", background: "#1a2d45", padding: "10px 16px", borderRadius: 12, maxWidth: "70%", display: "flex", flexDirection: "column", gap: 4 },
-  msgJarvis: { alignSelf: "flex-start", background: "#0d1520", border: "1px solid #1a2d45", padding: "10px 16px", borderRadius: 12, maxWidth: "70%", display: "flex", flexDirection: "column", gap: 4 },
+  msgUser: { alignSelf: "flex-end", background: "#1a2d45", padding: "10px 16px", borderRadius: 12, maxWidth: "85%", display: "flex", flexDirection: "column", gap: 4 },
+  msgJarvis: { alignSelf: "flex-start", background: "#0d1520", border: "1px solid #1a2d45", padding: "10px 16px", borderRadius: 12, maxWidth: "85%", display: "flex", flexDirection: "column", gap: 4, whiteSpace: "pre-line" },
   msgRole: { fontSize: 10, color: "#00d4ff", letterSpacing: 2, textTransform: "uppercase" },
-  inputArea: { padding: 24, borderTop: "1px solid #1a2d45", display: "flex", gap: 12 },
+  inputArea: { padding: 16, borderTop: "1px solid #1a2d45", display: "flex", gap: 8 },
   input: { flex: 1, background: "#0d1520", border: "1px solid #1a2d45", borderRadius: 8, padding: "12px 16px", color: "#c8dff0", fontSize: 14, outline: "none" },
-  btn: { background: "#00d4ff", color: "#060a10", border: "none", borderRadius: 8, padding: "12px 24px", fontWeight: 700, cursor: "pointer", fontSize: 14 }
+  btn: { background: "#00d4ff", color: "#060a10", border: "none", borderRadius: 8, padding: "12px 16px", fontWeight: 700, cursor: "pointer", fontSize: 14 }
 };

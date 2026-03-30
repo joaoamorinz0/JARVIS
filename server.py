@@ -11,6 +11,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import subprocess
 from tavily import TavilyClient
+from google_services import ler_emails, agenda_hoje, criar_evento
 
 load_dotenv()
 
@@ -123,7 +124,9 @@ Quando pedir pausa, responda apenas: PAUSAR_MUSICA.
 Quando pedir próxima, responda apenas: PROXIMA_MUSICA.
 Para todo o resto, responda normalmente.
 Quando o usuário disser "mais álcool" ou "modo álcool", responda EXATAMENTE com uma única palavra: MODO_ALCOOL. Nada mais.
-Quando o usuário pedir para pesquisar algo, responda apenas: PESQUISAR: [o que pesquisar]."""
+Quando o usuário pedir para pesquisar algo, responda apenas: PESQUISAR: [o que pesquisar].
+Quando pedir emails, responda apenas: LER_EMAILS.
+Quando pedir agenda, responda apenas: AGENDA_HOJE."""
             },
             *historico
         ]
@@ -149,6 +152,10 @@ Quando o usuário pedir para pesquisar algo, responda apenas: PESQUISAR: [o que 
     elif "PESQUISAR:" in resposta_texto:
         query = resposta_texto.split("PESQUISAR:")[1].strip()
         return {"resposta": pesquisar(query)}
+    elif "LER_EMAILS" in resposta_texto:
+        return {"resposta": ler_emails()}
+    elif "AGENDA_HOJE" in resposta_texto:
+        return {"resposta": agenda_hoje()}
 
     return {"resposta": resposta_texto}
 
