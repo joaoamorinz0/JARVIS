@@ -10,6 +10,7 @@ from datetime import date
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import subprocess
+from tavily import TavilyClient
 
 load_dotenv()
 
@@ -29,6 +30,7 @@ usuario = {
 
 hoje = date.today().strftime("%d/%m/%Y")
 cliente = Groq(api_key=os.getenv("GROQ_API_KEY"))
+tavily = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 historico = []
 
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
@@ -71,6 +73,23 @@ def modo_alcool():
     subprocess.Popen(["code", "."], shell=True, creationflags=subprocess.DETACHED_PROCESS)
     return "Playlist ativada. VS Code aberto. Boa sorte, João."
 
+def pesquisar(query):
+    resultado = tavily.search(query=query, search_depth="basic")
+    if not resultado["results"]:
+        return "Não encontrei nada sobre isso."
+    top = resultado["results"][0]
+    conteudo = top['content'][:300]
+
+    resumo = cliente.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        max_tokens=300,
+        messages=[{
+            "role": "user",
+            "content": f"Resuma em português de forma curta e direta: {conteudo}"
+        }]
+    )
+    return resumo.choices[0].message.content
+
 class Mensagem(BaseModel):
     texto: str
     hora: int
@@ -93,7 +112,8 @@ Quando pedir música, responda apenas: TOCAR_MUSICA: [música].
 Quando pedir pausa, responda apenas: PAUSAR_MUSICA.
 Quando pedir próxima, responda apenas: PROXIMA_MUSICA.
 Para todo o resto, responda normalmente.
-Quando o usuário disser "mais álcool" ou "modo álcool", responda EXATAMENTE com uma única palavra: MODO_ALCOOL. Nada mais."""
+Quando o usuário disser "mais álcool" ou "modo álcool", responda EXATAMENTE com uma única palavra: MODO_ALCOOL. Nada mais.
+Quando o usuário pedir para pesquisar algo, responda apenas: PESQUISAR: [o que pesquisar]."""
             },
             *historico
         ]
@@ -116,6 +136,9 @@ Quando o usuário disser "mais álcool" ou "modo álcool", responda EXATAMENTE c
         return {"resposta": "Próxima música."}
     elif "MODO_ALCOOL" in resposta_texto:
         return {"resposta": modo_alcool()}
+    elif "PESQUISAR:" in resposta_texto:
+        query = resposta_texto.split("PESQUISAR:")[1].strip()
+        return {"resposta": pesquisar(query)}
 
     return {"resposta": resposta_texto}
 
