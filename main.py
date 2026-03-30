@@ -30,6 +30,7 @@ cliente = Groq(api_key=os.getenv("GROQ_API_KEY"))
 elevenlabs = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
 modelo_whisper = whisper.load_model("base")
 
+
 def carregar_historico():
     try:
         with open("historico.json", "r") as arquivo:

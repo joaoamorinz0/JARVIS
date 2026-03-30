@@ -64,12 +64,22 @@ def tocar_musica(query):
     tracks = resultados["tracks"]["items"]
     if not tracks:
         return "Música não encontrada."
+ 
+    devices = sp.devices()
+    if not devices["devices"]:
+        return "Nenhum dispositivo Spotify ativo. Abra o Spotify primeiro."
+    
+    device_id = devices["devices"][0]["id"]
     track = tracks[0]
-    sp.start_playback(uris=[track["uri"]])
+    sp.start_playback(device_id=device_id, uris=[track["uri"]])
     return f"Tocando: {track['name']} - {track['artists'][0]['name']}"
 
 def modo_alcool():
-    sp.start_playback(context_uri="spotify:playlist:211DtusAlTCjHkh7bEs1Ls")
+    devices = sp.devices()
+    if not devices["devices"]:
+        return "Nenhum dispositivo Spotify ativo."
+    device_id = devices["devices"][0]["id"]
+    sp.start_playback(device_id=device_id, context_uri="spotify:playlist:211DtusAlTCjHkh7bEs1Ls")
     subprocess.Popen(["code", "."], shell=True, creationflags=subprocess.DETACHED_PROCESS)
     return "Playlist ativada. VS Code aberto. Boa sorte, João."
 
