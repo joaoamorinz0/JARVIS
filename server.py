@@ -101,6 +101,18 @@ def pesquisar(query):
     )
     return resumo.choices[0].message.content
 
+def notificar(titulo, mensagem):
+    requests.post(
+        "https://ntfy.sh/jarvis-joao-123",  # ← canal único seu
+        data=mensagem.encode('utf-8'),
+        headers={"Title": titulo}
+    )
+
+def verificar_emails_importantes():
+    emails = ler_emails(max=1)
+    if "Nenhum" not in emails:
+        notificar("📧 Email novo", emails)
+
 class Mensagem(BaseModel):
     texto: str
     hora: int
@@ -115,7 +127,7 @@ def chat(msg: Mensagem):
         messages=[
             {
                 "role": "system",
-                "content": f"""Você é o Jarvis, assistente pessoal de {usuario['nome']} de {usuario['cidade']}.
+                "content": f"""Você é o Jarvis, assistente pessoal de {usuario['nome']}.
 Hoje é {hoje} e são exatamente {msg.hora}h.
 Quando pedir CEP, responda apenas: BUSCAR_CEP: [cep].
 Quando pedir clima, responda apenas: BUSCAR_CLIMA: [cidade].
@@ -126,7 +138,9 @@ Para todo o resto, responda normalmente.
 Quando o usuário disser "mais álcool" ou "modo álcool", responda EXATAMENTE com uma única palavra: MODO_ALCOOL. Nada mais.
 Quando o usuário pedir para pesquisar algo, responda apenas: PESQUISAR: [o que pesquisar].
 Quando pedir emails, responda apenas: LER_EMAILS.
-Quando pedir agenda, responda apenas: AGENDA_HOJE."""
+Quando pedir agenda, responda apenas: AGENDA_HOJE.
+Seja carismático, engraçado e direto. Use emojis quando achar viável, mas sem exageros.
+Quando pedir para desligar o PC, responda apenas: DESLIGAR_PC."""
             },
             *historico
         ]
@@ -156,12 +170,28 @@ Quando pedir agenda, responda apenas: AGENDA_HOJE."""
         return {"resposta": ler_emails()}
     elif "AGENDA_HOJE" in resposta_texto:
         return {"resposta": agenda_hoje()}
+    elif "DESLIGAR_PC" in resposta_texto:
+        subprocess.run(["shutdown", "/s", "/t", "60"])
+        notificar("💻 Jarvis", "PC desligando em 60 segundos!")
+        return {"resposta": "Desligando em 60 segundos!"}
 
     return {"resposta": resposta_texto}
 
 @app.get("/clima")
 def clima():
     return {"clima": buscar_clima(usuario["cidade"])}
+
+@app.get("/desligar")
+def desligar():
+    subprocess.run(["shutdown", "/s", "/t", "60"])
+    notificar("💻 Jarvis", "PC desligando em 60 segundos!")
+    return {"resposta": "Desligando em 60 segundos!"}
+
+@app.get("/cancelar_desligamento")
+def cancelar_desligamento():
+    subprocess.run(["shutdown", "/a"])
+    return {"resposta": "Desligamento cancelado!"}
+
 
 @app.get("/spotify")
 def spotify_status():
@@ -178,3 +208,5 @@ def spotify_status():
         return {"tocando": False}
     except:
         return {"tocando": False}
+    
+
