@@ -26,7 +26,7 @@ app.add_middleware(
 
 usuario = {
     "nome": "João",
-    "cidade": "Goiás"
+    "cidade": "Valparaíso"
 }
 
 hoje = date.today().strftime("%d/%m/%Y")
